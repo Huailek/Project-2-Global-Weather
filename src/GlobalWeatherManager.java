@@ -96,18 +96,14 @@ public class GlobalWeatherManager implements GlobalWeatherManagerInterface{
         if(day < 1 || day > 31) {
             throw new IllegalArgumentException("days must be valid");
         }
-
         ArrayList<WeatherReading> tempArray = new ArrayList<>();
-
         for (int readingIdx = 0; readingIdx < count; readingIdx++) {
             WeatherReading temp = readWeather.get(index + readingIdx);
             if (temp.month() == month && temp.day() == day) {
                 tempArray.add(temp);
             }
         }
-
         WeatherReading[] weatherArray = new WeatherReading[tempArray.size()];
-
         for (int i = 0; i < tempArray.size(); i++){
             weatherArray[i] = tempArray.get(i);
         }
@@ -138,12 +134,12 @@ public class GlobalWeatherManager implements GlobalWeatherManagerInterface{
         Collections.sort(readWeather);
         int min = 0;
         int max = readWeather.size() - 1;
-        int firstIndex = -1;
+        int foundIndex = -1;
         while (min <= max) {
             int mid = (max + min) / 2;
             int compare = readWeather.get(mid).compareString(temp);
             if (compare == 0) {
-                firstIndex = mid;
+                foundIndex = mid;
                 max = mid - 1;
                 //return mid;     // found it!
             } else if (compare < 0) {
@@ -152,28 +148,29 @@ public class GlobalWeatherManager implements GlobalWeatherManagerInterface{
                 max = mid - 1;  // too large
             }
         }
-        int count = 0;
-        int index = firstIndex;
-        while(readWeather.get(firstIndex).city().equalsIgnoreCase(readWeather.get(index).city())) {
-            count++;
-            index++;
-        }
-        ArrayList<Integer> yearsArray = new ArrayList<>();
-        index = firstIndex;
-        int currentYear = readWeather.get(firstIndex).year();
-        yearsArray.add(currentYear);
-        while(readWeather.get(firstIndex).city().equalsIgnoreCase(readWeather.get(index).city())) {
-            if (currentYear != readWeather.get(index).year()) {
-                yearsArray.add(readWeather.get(index).year());
-                currentYear = readWeather.get(index).year();
+        int firstIndex = 0;
+        for (int index = 0; index <= foundIndex; index++) {
+            if (readWeather.get(index).compareString(temp) == 0){
+                firstIndex = index;
+                break;
             }
-            index++;
         }
+        int count = 0;
+        int year = 0;
+        int index = firstIndex;
+        ArrayList<Integer> yearList = new ArrayList<>();
+        while (readWeather.get(index).compareString(temp) == 0) {
+            count += 1;
+            if (readWeather.get(index).year() != year) {
+                yearList.add(readWeather.get(index).year());
+            }
+            year = readWeather.get(index).year();
+            index ++;
+        }
+        int[] intYearsArray = new int[yearList.size()];
 
-        int[] intYearsArray = new int[yearsArray.size()];
-
-        for (int i = 0; i <yearsArray.size(); i++) {
-            intYearsArray[i] = yearsArray.get(i);
+        for (int i = 0; i <yearList.size(); i++) {
+            intYearsArray[i] = yearList.get(i);
         }
         return new CityListStats(firstIndex,count, intYearsArray);   // not found
     }
